@@ -31,14 +31,14 @@ def load_and_prepare_metadata(path):
     try:
         # Use DuckDB to efficiently read distinct values for dropdowns from Parquet
         # DuckDB can directly read from HTTP(s) paths
-        # Corrected force_download=true syntax
-        states = con.execute(f"SELECT DISTINCT state FROM read_parquet('{path}', force_download=true) ORDER BY state").fetchdf()['state'].tolist()
-        years = con.execute(f"SELECT DISTINCT date_year FROM read_parquet('{path}', force_download=true) ORDER BY date_year").fetchdf()['date_year'].tolist()
-        months = con.execute(f"SELECT DISTINCT date_month FROM read_parquet('{path}', force_download=true) ORDER BY date_month").fetchdf()['date_month'].tolist()
+        # Removed force_download=true as it was causing a Binder Error
+        states = con.execute(f"SELECT DISTINCT state FROM read_parquet('{path}') ORDER BY state").fetchdf()['state'].tolist()
+        years = con.execute(f"SELECT DISTINCT date_year FROM read_parquet('{path}') ORDER BY date_year").fetchdf()['date_year'].tolist()
+        months = con.execute(f"SELECT DISTINCT date_month FROM read_parquet('{path}') ORDER BY date_month").fetchdf()['date_month'].tolist()
 
         # For pre-selecting the most common state, we still need a quick query.
         try:
-            mode_state_query = f"SELECT state FROM read_parquet('{path}', force_download=true) GROUP BY state ORDER BY COUNT(*) DESC LIMIT 1"
+            mode_state_query = f"SELECT state FROM read_parquet('{path}') GROUP BY state ORDER BY COUNT(*) DESC LIMIT 1"
             mode_state_result = con.execute(mode_state_query).fetchdf()
             most_common_state = mode_state_result['state'].iloc[0] if not mode_state_result.empty else (states[0] if states else None)
         except Exception:
@@ -104,8 +104,8 @@ def get_districts_for_state(path, state):
     """
     try:
         # Query DuckDB for districts specific to the selected state
-        # Corrected force_download=true syntax
-        district_query = f"SELECT DISTINCT district FROM read_parquet('{path}', force_download=true) WHERE state = '{state}' ORDER BY district;"
+        # Removed force_download=true here as well
+        district_query = f"SELECT DISTINCT district FROM read_parquet('{path}') WHERE state = '{state}' ORDER BY district;"
         districts = con.execute(district_query).fetchdf()['district'].tolist()
         
         # Add 'Entire State' option at the beginning
@@ -150,7 +150,7 @@ def get_caste_distribution_duckdb_optimized(path, state, year, month, view_entir
         if district and district != 'Entire State':
             where_clauses.append(f"district = '{district}'")
 
-        where_str = " AND ".join(where_clauses)
+        where_str = " AND ". присоединяемся(where_clauses)
 
         query = f"""
         SELECT
@@ -160,7 +160,7 @@ def get_caste_distribution_duckdb_optimized(path, state, year, month, view_entir
             ROUND(CAST({count_hh_id_clause} AS DOUBLE) * 100.0 / {sum_count_over_clause}, 2) AS "Percentage (%)",
             ROW_NUMBER() OVER (ORDER BY {count_hh_id_clause} DESC) AS "Rank"
         FROM
-            read_parquet('{path}', force_download=true) -- Corrected force_download=true syntax
+            read_parquet('{path}') -- Removed force_download=true here
         WHERE
             {where_str}
         GROUP BY
