@@ -150,7 +150,8 @@ def get_caste_distribution_duckdb_optimized(path, state, year, month, view_entir
         if district and district != 'Entire State':
             where_clauses.append(f"district = '{district}'")
 
-        where_str = " AND ". присоединяемся(where_clauses)
+        # Corrected the typo: 'присоединяемся' changed to 'join'
+        where_str = " AND ".join(where_clauses)
 
         query = f"""
         SELECT
@@ -160,7 +161,7 @@ def get_caste_distribution_duckdb_optimized(path, state, year, month, view_entir
             ROUND(CAST({count_hh_id_clause} AS DOUBLE) * 100.0 / {sum_count_over_clause}, 2) AS "Percentage (%)",
             ROW_NUMBER() OVER (ORDER BY {count_hh_id_clause} DESC) AS "Rank"
         FROM
-            read_parquet('{path}') -- Removed force_download=true here
+            read_parquet('{path}')
         WHERE
             {where_str}
         GROUP BY
