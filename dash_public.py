@@ -9,7 +9,7 @@ st.set_page_config(layout="wide", page_title="Caste Data Dashboard")
 
 # Define the path to your PARQUET dataset.
 # IMPORTANT: This will now be the direct public URL to your Parquet file.
-DATA_PATH = 'https://www.dropbox.com/scl/fi/62yqwgjqefx73z3x0vxte/new_replication_panel.parquet?rlkey=1ikjq3v77yq12ag5iiaryzcqj&st=86d8clgb&raw=1'
+DATA_PATH = 'https://storage.googleapis.com/jati-data/new_replication_panel.parquet'
 
 # --- Initialize DuckDB Connection ---
 # We'll use a simple in-memory connection for querying the Parquet file directly.
