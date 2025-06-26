@@ -31,14 +31,14 @@ def load_and_prepare_metadata(path):
     try:
         # Use DuckDB to efficiently read distinct values for dropdowns from Parquet
         # DuckDB can directly read from HTTP(s) paths
-        # Added force_download=true as suggested by the error message for large files over HTTP
-        states = con.execute(f"SELECT DISTINCT state FROM read_parquet('{path}', {{force_download: true}}) ORDER BY state").fetchdf()['state'].tolist()
-        years = con.execute(f"SELECT DISTINCT date_year FROM read_parquet('{path}', {{force_download: true}}) ORDER BY date_year").fetchdf()['date_year'].tolist()
-        months = con.execute(f"SELECT DISTINCT date_month FROM read_parquet('{path}', {{force_download: true}}) ORDER BY date_month").fetchdf()['date_month'].tolist()
+        # Corrected force_download=true syntax
+        states = con.execute(f"SELECT DISTINCT state FROM read_parquet('{path}', force_download=true) ORDER BY state").fetchdf()['state'].tolist()
+        years = con.execute(f"SELECT DISTINCT date_year FROM read_parquet('{path}', force_download=true) ORDER BY date_year").fetchdf()['date_year'].tolist()
+        months = con.execute(f"SELECT DISTINCT date_month FROM read_parquet('{path}', force_download=true) ORDER BY date_month").fetchdf()['date_month'].tolist()
 
         # For pre-selecting the most common state, we still need a quick query.
         try:
-            mode_state_query = f"SELECT state FROM read_parquet('{path}', {{force_download: true}}) GROUP BY state ORDER BY COUNT(*) DESC LIMIT 1"
+            mode_state_query = f"SELECT state FROM read_parquet('{path}', force_download=true) GROUP BY state ORDER BY COUNT(*) DESC LIMIT 1"
             mode_state_result = con.execute(mode_state_query).fetchdf()
             most_common_state = mode_state_result['state'].iloc[0] if not mode_state_result.empty else (states[0] if states else None)
         except Exception:
@@ -46,7 +46,7 @@ def load_and_prepare_metadata(path):
 
         return states, years, months, most_common_state
     except Exception as e:
-        st.error(f"Error preparing metadata from Parquet: {e}. Please ensure the Dropbox link is a direct download link and publicly accessible. 'force_download=true' has been added to queries.")
+        st.error(f"Error preparing metadata from Parquet: {e}. Please ensure the Dropbox link is a direct download link and publicly accessible.")
         st.stop()
 
 # Get the unique values for dropdowns and pre-selection from DuckDB queries on Parquet
@@ -104,8 +104,8 @@ def get_districts_for_state(path, state):
     """
     try:
         # Query DuckDB for districts specific to the selected state
-        # Added force_download=true here as well
-        district_query = f"SELECT DISTINCT district FROM read_parquet('{path}', {{force_download: true}}) WHERE state = '{state}' ORDER BY district;"
+        # Corrected force_download=true syntax
+        district_query = f"SELECT DISTINCT district FROM read_parquet('{path}', force_download=true) WHERE state = '{state}' ORDER BY district;"
         districts = con.execute(district_query).fetchdf()['district'].tolist()
         
         # Add 'Entire State' option at the beginning
@@ -160,7 +160,7 @@ def get_caste_distribution_duckdb_optimized(path, state, year, month, view_entir
             ROUND(CAST({count_hh_id_clause} AS DOUBLE) * 100.0 / {sum_count_over_clause}, 2) AS "Percentage (%)",
             ROW_NUMBER() OVER (ORDER BY {count_hh_id_clause} DESC) AS "Rank"
         FROM
-            read_parquet('{path}', {{force_download: true}}) -- Added force_download=true here
+            read_parquet('{path}', force_download=true) -- Corrected force_download=true syntax
         WHERE
             {where_str}
         GROUP BY
@@ -214,7 +214,7 @@ else:
         'caste': 'Jati (Ranked)',
         'Households Count': 'Number of Households',
         'Percentage (%)': 'Percentage of Households',
-        'Caste Category': 'Caste Category' # Corrected this column name, it was 'caste_category' earlier in rename
+        'caste_category': 'Caste Category'
     })
 
     # --- Dominant Jati Section ---
