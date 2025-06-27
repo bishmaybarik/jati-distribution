@@ -58,11 +58,10 @@ if not all_states or not all_years or not all_months:
     st.stop()
 
 # --- Dashboard Title and Introduction ---
-st.title("State-wise Caste Distribution Dashboard (Parquet & DuckDB Optimized)")
+st.title("State-wise Jati Distribution Dashboard")
 st.markdown("""
-This interactive dashboard explores caste distribution and dominant jatis using a highly optimized
-Parquet data file and DuckDB for lightning-fast queries.
-Use the dropdowns on the sidebar to filter the data.
+This interactive dashboard visualizes caste distribution and dominant jatis using data from the Consumer Pyramids Household Survey (CPHS), covering the period from January 2014 to November 2024. Caste and jati classifications are based on the head of the household. Feedback and suggestions are always welcome. 
+Please use the dropdowns on the sidebar to filter the data.
 """)
 
 # --- Sidebar Filters ---
@@ -238,4 +237,4 @@ else:
     st.dataframe(ranked_jatis_display, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("Data provided by the Culture and Debt Project (CPHS).")
+    st.markdown("Data provided by the Consumption and Income Pyramids of the Consumer Pyramids Household Survey (CPHS).")
