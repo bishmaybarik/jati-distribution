@@ -31,7 +31,6 @@ def load_and_prepare_metadata(path):
     try:
         # Use DuckDB to efficiently read distinct values for dropdowns from Parquet
         # DuckDB can directly read from HTTP(s) paths
-        # Removed force_download=true as it was causing a Binder Error
         states = con.execute(f"SELECT DISTINCT state FROM read_parquet('{path}') ORDER BY state").fetchdf()['state'].tolist()
         years = con.execute(f"SELECT DISTINCT date_year FROM read_parquet('{path}') ORDER BY date_year").fetchdf()['date_year'].tolist()
         months = con.execute(f"SELECT DISTINCT date_month FROM read_parquet('{path}') ORDER BY date_month").fetchdf()['date_month'].tolist()
@@ -103,7 +102,6 @@ def get_districts_for_state(path, state):
     """
     try:
         # Query DuckDB for districts specific to the selected state
-        # Removed force_download=true here as well
         district_query = f"SELECT DISTINCT district FROM read_parquet('{path}') WHERE state = '{state}' ORDER BY district;"
         districts = con.execute(district_query).fetchdf()['district'].tolist()
         
@@ -149,7 +147,6 @@ def get_caste_distribution_duckdb_optimized(path, state, year, month, view_entir
         if district and district != 'Entire State':
             where_clauses.append(f"district = '{district}'")
 
-        # Corrected the typo: 'присоединяемся' changed to 'join'
         where_str = " AND ".join(where_clauses)
 
         query = f"""
@@ -203,15 +200,15 @@ else:
 
     st.subheader(f"Total Households {location_text} {time_text}: {total_households_in_state}")
 
-    # Rename columns for clarity in the table display
+    # Rename columns for clarity in the table display and reorder them as requested
     ranked_jatis_display = ranked_jatis[[
         'Rank',
+        'caste_category',
         'caste',
         'Households Count',
-        'Percentage (%)',
-        'caste_category'
+        'Percentage (%)'
     ]].rename(columns={
-        'caste': 'Jati (Ranked)',
+        'caste': 'Jati',
         'Households Count': 'Number of Households',
         'Percentage (%)': 'Percentage of Households',
         'caste_category': 'Caste Category'
